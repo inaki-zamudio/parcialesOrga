@@ -1,0 +1,4 @@
+test_c
+test_asm
+test_abi
+*.o
