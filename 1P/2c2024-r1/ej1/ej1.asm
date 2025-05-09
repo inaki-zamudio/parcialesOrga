@@ -18,21 +18,21 @@ COLUMNAS EQU 255
 ; Funciones a implementar:
 ;   - optimizar
 global EJERCICIO_1A_HECHO
-EJERCICIO_1A_HECHO: db 1 ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1A_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
 
 ; Marca el ejercicio 1B como hecho (`true`) o pendiente (`false`).
 ;
 ; Funciones a implementar:
 ;   - contarCombustibleAsignado
 global EJERCICIO_1B_HECHO
-EJERCICIO_1B_HECHO: db 1 ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1B_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
 
 ; Marca el ejercicio 1C como hecho (`true`) o pendiente (`false`).
 ;
 ; Funciones a implementar:
 ;   - modificarUnidad
 global EJERCICIO_1C_HECHO
-EJERCICIO_1C_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1C_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 ;########### ESTOS SON LOS OFFSETS Y TAMAÑO DE LOS STRUCTS
 ; Completar las definiciones (serán revisadas por ABI enforcer):
@@ -186,31 +186,33 @@ modificarUnidad:
 	push rbx
 	sub rsp, 8
 
-	mov r12, rdi
-	mov r13b, sil
-	mov r14b, dl
-	mov r15, rcx
+	mov r12, rdi ; mapa
+	mov r13b, sil ; x
+	mov r14b, dl ; y
+	mov r15, rcx ; fun_modificar
 
 	; r12 + 8*(255*x + y) = mapa[x][y]
-	mov r8, COLUMNAS
-	mul r8, r13b
-	add r8, r14b
-	imul r8, 8
-	add r8, r12
+	mov r8, COLUMNAS ; r8 = 255
+	mul r8, r13b ; 255*x
+	add r8, r14b ; 255*x + y
+	imul r8, 8 ; 8*(255 * x + y)
+	add r8, r12 ; r12 + 8*(255 * x + y)
 	mov rbx, r8 ; mapa[x][y]
 
 	cmp rbx, 0 ; mapa[x][y] == NULL ?
 	je .fin
 
-	mov rdi, rbx
+	mov rdi, rbx ; preparo mapa[x][y] para el call
 	mov r9, [rbx + ATTACKUNIT_REFERENCES] ; mapa[x][y]->references == 1
-	cmp r9, 1
+	cmp r9, 1 ; if (mapa[x][y]->references == 1)
 	je .fun_modificar
-
-	mov rdi, ATTACKUNIT_SIZE
+	
+	; else
+	mov rdi, ATTACKUNIT_SIZE ; preparo sizeof(attackunit_t) para el call
 	call malloc ; rax = attackunit_t* nueva_unidad
 	mov r12, rax
-	mov r8, [rbx] ; *mapa[x][y]
+
+	mov r8, dword [rbx] ; *mapa[x][y]
 	mov [r12], r8 ; *nueva_unidad = *mapa[x][y]
 	dec [rbx + ATTACKUNIT_REFERENCES] ; mapa[x][y]->references--
 	mov [r12 + ATTACKUNIT_REFERENCES], byte 1 ; nueva_unidad->references = 1
@@ -220,9 +222,7 @@ modificarUnidad:
 
 
 .fun_modificar:
-	call r15
-	jmp .fin
-
+	call r15 ; fun_modificar(mapa[x][y])
 
 .fin:
 	; epilogo
