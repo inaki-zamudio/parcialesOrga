@@ -1,0 +1,17 @@
+== Ejercicio 1 ==
+
+Test countVowels - Cuenta Vocales
+
+3 - mikasa
+2 - eren
+5 - murcielago
+0 - NULL
+
+Test createLettersQuantityArray - Crea un arreglo de Letras Cantidad
+
+[consonats: 3 - word: mikasa - vowels: 3]
+[consonats: 3 - word: mikasa- vowels: 3,NULL,consonats: 5 - word: murcielago- vowels: 5,NULL,consonats: 6 - word: shopping - vowels: 2]
+Test getMaxVowels - Obtiene la palabra con más consonantes 
+
+[consonats: 3 - word: mikasa- vowels: 3,consonats: 2 - word: eren- vowels: 2,consonats: 5 - word: murcielago - vowels: 5]murcielago
+[NULL,NULL,NULL,NULL,NULL,consonats: 3 - word: reiner- vowels: 3,NULL,NULL,NULL,NULL]reiner
