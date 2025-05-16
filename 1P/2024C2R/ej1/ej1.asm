@@ -18,14 +18,14 @@ COLUMNAS EQU 255
 ; Funciones a implementar:
 ;   - optimizar
 global EJERCICIO_1A_HECHO
-EJERCICIO_1A_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1A_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 ; Marca el ejercicio 1B como hecho (`true`) o pendiente (`false`).
 ;
 ; Funciones a implementar:
 ;   - contarCombustibleAsignado
 global EJERCICIO_1B_HECHO
-EJERCICIO_1B_HECHO: db FALSE ; Cambiar por `TRUE` para correr los tests.
+EJERCICIO_1B_HECHO: db TRUE ; Cambiar por `TRUE` para correr los tests.
 
 ; Marca el ejercicio 1C como hecho (`true`) o pendiente (`false`).
 ;
