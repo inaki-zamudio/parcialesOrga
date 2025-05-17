@@ -188,17 +188,48 @@ modificarUnidad:
 	mov r12, rdi ; mapa
 	movzx r13, sil ; x
 	movzx r14, dl ; y
-	mov r15, rcx ; fun_modificar
+	mov r15, rcx ; fun
 
-	mov r8, qword 255 ; 255
-	shl r8, 3 ; 255*8
-	imul r8, r13 ; 255*8*x
-	add r12, r8 ; mapa[x]
-	shl r14, 3 ; y * 8
-	add r12, r14 ; mapa[x][y]
+	; mapa[x] = base + 255*8
+	; mapa[x][y] = base + 255*8 + y*8
+	mov r9, 255
+	shl r9, 3 ; 255*8
 	
-	
+	mov r8, r12 ; mapa
+	add r8, r9 ; mapa + 255*8 (puntero)
 
+	mov r9, r14
+	shl r9, 8 ; y*8
+
+	add r8, r9 ; mapa + 255*8 + y*8 (puntero)
+
+	mov rbx, [r8] ; rbx = mapa[x][y]
+
+	cmp rbx, 0 ; if (mapa[x][y] == NULL)
+	je .fin
+
+	cmp byte [rbx + ATTACKUNIT_REFERENCES], 1 ; if (mapa[x][y]->references == 1)
+	je .unaRef
+
+	mov rdi, 16
+	call malloc ; rax = nueva_unidad
+	mov r13, rax ; nueva_unidad
+
+	movzx r8, word [rbx] ; r8 = *mapa[x][y]
+	mov [r13], r8 ; *nueva_unidad = *mapa[x][y]
+	dec byte [rbx + ATTACKUNIT_REFERENCES] ; mapa[x][y]->references--
+	mov byte [r13 + ATTACKUNIT_REFERENCES], 1 ; nueva_unidad->references = 1
+
+	mov rdi, r13
+	call r15 ; fun_modificar(nueva_unidad)
+	mov rbx, r13 ; mapa[x][y] = nueva_unidad
+	jmp .fin
+
+	.unaRef:
+	mov rdi, rbx
+	call r15
+
+	.fin:
 	; epílogo
 	pop rbx
 	pop r15
@@ -206,123 +237,4 @@ modificarUnidad:
 	pop r13
 	pop r12
 	pop rbp
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-; 	; rdi = mapa_t           mapa
-; 	; sil  = uint8_t          x
-; 	; dl  = uint8_t          y
-; 	; rcx = void*            fun_modificar(attackunit_t*)
-
-; 	; prologo
-; 	push rbp
-; 	mov rbp, rsp
-; 	push r12
-; 	push r13
-; 	push r14
-; 	push r15
-; 	push rbx
-; 	sub rsp, 8
-
-; 	mov r12, rdi ; mapa
-; 	mov r13b, sil ; x
-; 	mov r14b, dl ; y
-; 	mov r15, rcx ; fun_modificar
-
-; 	; r12 + 8*(255*x + y) = mapa[x][y]
-; 	mov r8, COLUMNAS ; r8 = 255
-; 	mul r8, r13b ; 255*x
-; 	add r8, r14b ; 255*x + y
-; 	imul r8, 8 ; 8*(255 * x + y)
-; 	add r8, r12 ; r12 + 8*(255 * x + y)
-; 	mov rbx, r8 ; mapa[x][y]
-
-; 	cmp rbx, 0 ; mapa[x][y] == NULL ?
-; 	je .fin
-
-; 	mov rdi, rbx ; preparo mapa[x][y] para el call
-; 	mov r9, [rbx + ATTACKUNIT_REFERENCES] ; mapa[x][y]->references == 1
-; 	cmp r9, 1 ; if (mapa[x][y]->references == 1)
-; 	je .fun_modificar
-	
-; 	; else
-; 	mov rdi, ATTACKUNIT_SIZE ; preparo sizeof(attackunit_t) para el call
-; 	call malloc ; rax = attackunit_t* nueva_unidad
-; 	mov r12, rax
-
-; 	mov r8, dword [rbx] ; *mapa[x][y]
-; 	mov [r12], r8 ; *nueva_unidad = *mapa[x][y]
-; 	dec [rbx + ATTACKUNIT_REFERENCES] ; mapa[x][y]->references--
-; 	mov [r12 + ATTACKUNIT_REFERENCES], byte 1 ; nueva_unidad->references = 1
-; 	mov rdi, r12
-; 	call r15
-
-
-
-; .fun_modificar:
-; 	call r15 ; fun_modificar(mapa[x][y])
-
-; .fin:
-; 	; epilogo
-; 	add rsp, 8
-; 	pop rbx
-; 	pop r15
-; 	pop r14
-; 	pop r13
-; 	pop r12
-; 	pop rbp
-; 	ret
+	ret

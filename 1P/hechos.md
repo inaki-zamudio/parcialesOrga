@@ -4,19 +4,19 @@
     - 1CP 
 
 - 2024
-    - 1CP - en curso
-    - 1CR - no terminado
-    - 2CP - hecho
-    - 2CR - no terminado falta c)
+    - C1P - en curso
+    - C1R - hecho
+    - C2P - hecho
+    - C2R - no terminado falta c) que caasi está
 
 - 2023
-    - 1CP - hecho
-    - 1CR - no
-    - 2CP - no
-    - 2CR - no
+    - C1P - hecho
+    - C1R - no
+    - C2P - duda en el a)
+    - C2R - no
 
 - 2022 - ninguno
-    - 1CP
-    - 1CR
-    - 2CP
-    - 2CR
+    - C1P
+    - C1R
+    - C2P
+    - C2R

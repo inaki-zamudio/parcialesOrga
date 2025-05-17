@@ -384,50 +384,53 @@ texto_chequear_tamanio:
 	push rbx
 	sub rsp, 8 ; pila alineada
 
-	mov r12, rdi
-	cmp dword [r12 + TEXTO_CUALQUIERA_OFFSET_TIPO], 0
-	je .casoBase
+	mov r12, rdi ; texto
+
+	cmp [r12 + TEXTO_CUALQUIERA_OFFSET_TIPO], dword 0
+	je .casoBase 
+	
+	mov rdi, [r12 + TEXTO_CONCATENACION_OFFSET_IZQUIERDA] ; concatenacion->izquierda
+	call texto_chequear_tamanio ; rax = texto_chequear_tamanio(concatenacion->izquierda)
+	mov r13, rax ; r13 = rax
+
+	mov rdi, [r12 + TEXTO_CONCATENACION_OFFSET_DERECHA] ; concatenacion->derecha
+	call texto_chequear_tamanio
+	mov r14, rax ; r14 = texto_chequear_tamanio(concatenacion->derecha)
+
+	and r13, r14 ; if (texto_chequear_tamanio(concatenacion->izquierda) && texto_chequear_tamanio(concatenacion->derecha))
+	cmp r13, qword 1
+	jne .false
+
+	mov rdi, r12
+	call texto_tamanio_total ; rax = texto_tamanio_total(concatenacion)
+	mov r15, rax
 
 	mov rdi, [r12 + TEXTO_CONCATENACION_OFFSET_IZQUIERDA]
-	call texto_chequear_tamanio
-	mov r13, rax
+	call texto_tamanio_total
+	mov rbx, rax
 
 	mov rdi, [r12 + TEXTO_CONCATENACION_OFFSET_DERECHA]
-	call texto_chequear_tamanio
-	mov r14, rax
+	call texto_tamanio_total ; rax = texto_tamanio_total(concatenacion->derecha)
 
-	cmp r13, r14 ; if (texto_chequear_tamanio(concatenacion->izquierda) && texto_chequear_tamanio(concatenacion->derecha))
+	add rbx, rax ; ttt(der) + ttt(izq)
+	cmp r15, rbx ; ttt(concat) == ttt(der) + ttt(izq)
 	jne .false
 
-	mov rdi, [r12] ; concatenacion
-	call texto_tamanio_total
-	mov r15, rax ; texto_tamanio_total(concatenacion)
-
-	mov rdi, [r12 + TEXTO_CONCATENACION_OFFSET_IZQUIERDA] ; concatenacion->izquierda
-	call texto_tamanio_total
-	mov rbx, rax ; texto_tamanio_total(concatenacion->izquierda)
-
-	mov rdi, [r12 + TEXTO_CONCATENACION_OFFSET_DERECHA]
-	call texto_tamanio_total
-
-	add rbx, rax ; texto_tamanio_total(concatenacion->izquierda) + texto_tamanio_total(concatenacion->derecha)
-	cmp r15, rbx
-	jne .false
-
-	mov rax, 1
+	mov rax, qword 1
+	jmp .fin
 
 	.casoBase:
-	mov rdi, [r12 + TEXTO_LITERAL_OFFSET_CONTENIDO]
-	call strlen
-
-	cmp rax, [r12 + TEXTO_LITERAL_OFFSET_TAMANIO] ; strlen(literal->contenido) == literal->tamanio
-	je .false
-
-	mov rax, 1
+	mov rdi, [r12 + TEXTO_LITERAL_OFFSET_CONTENIDO] ; literal->contenido
+	call strlen ; rax = strlen(literal->contenido)
+	mov r8, [r12 + TEXTO_LITERAL_OFFSET_TAMANIO] ; literal->tamanio
+	cmp rax, r8 ; strlen(literal->contenido) == literal->tamanio
+	jne .false
+	
+	mov rax, qword 1
 	jmp .fin
 
 	.false:
-	mov rax, 0
+	mov rax, qword 0
 
 	.fin:
 	; epilogo
