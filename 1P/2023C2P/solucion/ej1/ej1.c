@@ -36,29 +36,57 @@ void listDelete(list_t* pList){
 
 uint8_t contar_pagos_aprobados(list_t* pList, char* usuario){
     uint8_t aprobados = 0;
-    listElem_t* act = pList->first;
-    while (act != NULL) {
-        if (strcmp(act->data->pagador, usuario) == 0) {
-            aprobados += act->data->aprobado;
+    if (pList != NULL) {
+        listElem_t* act = pList->first;
+        while (act != NULL) {
+            if (strcmp(act->data->cobrador, usuario) == 0 && act->data->aprobado == 1) {
+                aprobados++;
+            }
+            act = act->next;
         }
-        act = act->next;
     }
     return aprobados;
 }
 
 uint8_t contar_pagos_rechazados(list_t* pList, char* usuario){
     uint8_t rechazados = 0;
-    listElem_t* act = pList->first;
-    while (act != NULL) {
-        if (strcmp(act->data->pagador, usuario) == 0) {
-            if (!act->data->aprobado) rechazados++;
+    if (pList != NULL) {
+        listElem_t* act = pList->first;
+        while (act != NULL) {
+            if (strcmp(act->data->cobrador, usuario) == 0 && act->data->aprobado == 0) {
+                rechazados++;
+            }
+            act = act->next;
         }
-        act = act->next;
     }
     return rechazados;
 }
 
 
 pagoSplitted_t* split_pagos_usuario(list_t* pList, char* usuario){
+    pagoSplitted_t* res = malloc(sizeof(pagoSplitted_t));
+    res->cant_aprobados = contar_pagos_aprobados(pList, usuario);
+    res->cant_rechazados = contar_pagos_rechazados(pList, usuario);
+    res->aprobados = malloc(8*res->cant_aprobados);
+    res->rechazados = malloc(8*res->cant_rechazados);
 
+    if (pList != NULL) {
+        listElem_t* act = pList->first;
+        uint8_t ultapr = 0;
+        uint8_t ultrech = 0;
+        while (act != NULL) {
+            if (strcmp(act->data->cobrador, usuario) == 0) {
+                if (act->data->aprobado == 1) {
+                    res->aprobados[ultapr] = act;
+                    ultapr++;
+                }
+                if (act->data->aprobado == 0) {
+                    res->rechazados[ultrech] = act;
+                    ultrech++;
+                }
+            }
+            act = act->next;
+        }
+    }
+    return res;
 }

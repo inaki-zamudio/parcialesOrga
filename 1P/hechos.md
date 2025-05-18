@@ -13,7 +13,7 @@
     - C1P - hecho
     - C1R - no
     - C2P - duda en el a)
-    - C2R - no
+    - C2R - falta el último
 
 - 2022 - ninguno
     - C1P
