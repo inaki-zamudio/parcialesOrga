@@ -11,8 +11,8 @@
 
 - 2023
     - C1P - hecho
-    - C1R - no
-    - C2P - duda en el a)
+    - C1R - hecho
+    - C2P - hecho
     - C2R - falta el último
 
 - 2022 - ninguno

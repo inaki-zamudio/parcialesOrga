@@ -11,7 +11,7 @@
 //*************************************
 //Declaración de estructuras
 //*****
-#define USE_ASM_IMPL 1
+#define USE_ASM_IMPL 1 
 
 typedef struct pago {
   uint8_t monto;
