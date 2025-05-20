@@ -7,7 +7,7 @@
     - C1P - en curso
     - C1R - hecho
     - C2P - hecho
-    - C2R - no terminado falta c) que caasi está
+    - C2R - hecho
 
 - 2023
     - C1P - hecho

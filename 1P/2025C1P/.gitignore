@@ -1,0 +1,16 @@
+*
+!/img
+!/img/*
+!/src
+!/src/*
+!/src/ej1
+!/src/ej1/*
+!/src/ej2
+!/src/ej2/*
+!/test_utils
+!/test_utils/*
+!/.github
+!/.github/*
+!README.md
+!.gitignore
+!tester.sh

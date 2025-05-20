@@ -171,70 +171,71 @@ contarCombustibleAsignado:
 	
 global modificarUnidad
 modificarUnidad:
-	; rdi --> mapa 
-	; sil --> x 
-	; dl  --> y
-	; rcx --> fun_modificar
+    ; rdi --> mapa 
+    ; sil --> x 
+    ; dl  --> y
+    ; rcx --> fun_modificar
 
-	; prólogo
-	push rbp
-	mov rbp, rsp
-	push r12
-	push r13
-	push r14
-	push r15
-	push rbx
+    ; prólogo
+    push rbp
+    mov rbp, rsp
+    push r12
+    push r13
+    push r14
+    push r15
+    push rbx
+    sub rsp, 8
 
-	mov r12, rdi ; mapa
-	movzx r13, sil ; x
-	movzx r14, dl ; y
-	mov r15, rcx ; fun
+    mov r12, rdi         ; r12 = mapa (puntero base)
+    movzx r13, sil       ; r13 = x
+    movzx r14, dl        ; r14 = y
+    mov r15, rcx         ; r15 = fun_modificar
 
-	; mapa[x] = base + 255*8
-	; mapa[x][y] = base + 255*8 + y*8
-	mov r9, 255
-	shl r9, 3 ; 255*8
-	
-	mov r8, r12 ; mapa
-	add r8, r9 ; mapa + 255*8 (puntero)
+    mov r8, r13          ; r8 = x
+    imul r8, 255         ; r8 = x * 255
+    add r8, r14          ; r8 = x * 255 + y
+    shl r8, 3            ; r8 = (x * 255 + y) * 8
 
-	mov r9, r14
-	shl r9, 8 ; y*8
+    mov rbx, [r12 + r8]  ; rbx = mapa[x][y] (puntero a unidad)
 
-	add r8, r9 ; mapa + 255*8 + y*8 (puntero)
+    cmp rbx, 0
+    je .fin
 
-	mov rbx, [r8] ; rbx = mapa[x][y]
+    cmp byte [rbx + ATTACKUNIT_REFERENCES], 1
+    je .solo_fun_mod
 
-	cmp rbx, 0 ; if (mapa[x][y] == NULL)
-	je .fin
+    ; Clonar unidad
+    mov rdi, ATTACKUNIT_SIZE
+    call malloc          ; rax = nueva_unidad
 
-	cmp byte [rbx + ATTACKUNIT_REFERENCES], 1 ; if (mapa[x][y]->references == 1)
-	je .unaRef
+    mov r9, rax          ; r9 = nueva_unidad
 
-	mov rdi, 16
-	call malloc ; rax = nueva_unidad
-	mov r13, rax ; nueva_unidad
+    ; Copiar toda la estructura (16 bytes)
+    mov rax, [rbx]
+    mov [r9], rax
+    mov rax, [rbx + 8]
+    mov [r9 + 8], rax
 
-	movzx r8, word [rbx] ; r8 = *mapa[x][y]
-	mov [r13], r8 ; *nueva_unidad = *mapa[x][y]
-	dec byte [rbx + ATTACKUNIT_REFERENCES] ; mapa[x][y]->references--
-	mov byte [r13 + ATTACKUNIT_REFERENCES], 1 ; nueva_unidad->references = 1
+    dec byte [rbx + ATTACKUNIT_REFERENCES] ; mapa[x][y]->references--
+    mov byte [r9 + ATTACKUNIT_REFERENCES], 1 ; nueva_unidad->references = 1
 
-	mov rdi, r13
-	call r15 ; fun_modificar(nueva_unidad)
-	mov rbx, r13 ; mapa[x][y] = nueva_unidad
-	jmp .fin
+    mov rdi, r9
+    call r15             ; fun_modificar(nueva_unidad)
 
-	.unaRef:
-	mov rdi, rbx
-	call r15
+    mov [r12 + r8], r9   ; mapa[x][y] = nueva_unidad
 
-	.fin:
-	; epílogo
-	pop rbx
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop rbp
-	ret
+    jmp .fin
+
+.solo_fun_mod:
+    mov rdi, rbx
+    call r15
+
+.fin:
+    add rsp, 8
+    pop rbx
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbp
+    ret

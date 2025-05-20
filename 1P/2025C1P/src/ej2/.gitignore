@@ -1,0 +1,7 @@
+test_c
+test_asm
+test_abi
+main_asm
+main_c
+.gdb_history
+*.o
