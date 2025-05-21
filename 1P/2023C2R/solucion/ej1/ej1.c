@@ -28,6 +28,35 @@ void string_proc_list_add_node(string_proc_list* list, uint8_t type, char* hash)
 }
 
 char* string_proc_list_concat(string_proc_list* list, uint8_t type , char* hash){
+    char* result = NULL;
+    string_proc_node* current = list->first;
+
+    // Concatenar los hashes de los nodos con el type pedido
+    while (current != NULL) {
+        if (current->type == type) {
+            if (result == NULL) {
+                // Primer hash: hacer una copia
+                result = str_concat("", current->hash);
+            } else {
+                char* temp = str_concat(result, current->hash);
+                free(result);
+                result = temp;
+            }
+        }
+        current = current->next;
+    }
+
+    // Concatenar el hash recibido como parámetro al final
+    if (result == NULL) {
+        // Si no hubo ningún nodo con ese type, solo devolver copia de hash
+        result = str_concat("", hash);
+    } else {
+        char* temp = str_concat(result, hash);
+        free(result);
+        result = temp;
+    }
+
+    return result;
 }
 
 

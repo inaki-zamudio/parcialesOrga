@@ -1,7 +1,7 @@
 ## Parciales y recuperatorios que ya resolví
 
 - 2025
-    - 1CP 
+    - 1CP - hecho
 
 - 2024
     - C1P - en curso
