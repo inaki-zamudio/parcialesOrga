@@ -7,7 +7,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <unistd.h>
-#define USE_ASM_IMPL 0
+#define USE_ASM_IMPL 1
 
 typedef struct nodo_display_list_t {
     // Puntero a la función que calcula z (puede ser distinta para cada nodo):
