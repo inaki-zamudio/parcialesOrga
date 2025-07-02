@@ -4,18 +4,18 @@
     - 1CP -                                                                                                                 
                                                                                                                                  
 - 2024                                                                                                                           
-    - C1P -                                                                                                              
-    - C1R - 
-    - C2P -
-    - C2R -
+    - C1P - hecho                                                                                        
+    - C1R - hecho 
+    - C2P - hecho
+    - C2R - hecho
                                                                                                                                  
 - 2023                                                                                                                           
     - C1P -
-    - C1R - en proceso(dudas)
+    - C1R - en proceso (dudas)
     - C2P -
     - C2R -
                                                                                                                                  
 - 2022  
     - C1P                                                                                                                        
     - C1R                                                                                                                        
-    - C2P - dudas                                                                                                                    - C2R      
+    - C2P - dudas                                                                                                                    -    - C2R      
