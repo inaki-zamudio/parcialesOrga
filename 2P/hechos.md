@@ -12,10 +12,11 @@
 - 2023                                                                                                                           
     - C1P -
     - C1R - en proceso (dudas)
-    - C2P -
-    - C2R -
+    - C2P - 1) hecho, 2) dudas -- VER REPO CAMI
+    - C2R - 1) hecho, falta 2)
                                                                                                                                  
 - 2022  
     - C1P                                                                                                                        
     - C1R                                                                                                                        
-    - C2P - dudas                                                                                                                    -    - C2R      
+    - C2P - dudas                                                                                                                    
+    - C2R      

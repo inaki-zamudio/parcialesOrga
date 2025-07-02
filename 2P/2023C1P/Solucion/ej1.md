@@ -1,82 +1,91 @@
-A) Suponiendo que no hay que hablar de la creacion de las tareas para definir el servicio:
+a)
+> Características del servicio: 
+> - 5 tareas nivel 3 (1)
+> - 1 tarea nivel 0 (2)
+> - (1) escriben en EAX resultados y (2) los puede leer
+> - (1) le ceden tiempo de ejecución a (2) y se quedan pausadas
 
-Para agregar agregar la syscall vamos a definir una interrupcion nueva en `idt_init()`
-
-Como las syscalls suelen definirse a partir del numero de interrupcion 80 la vamos a definir como la interrupcion numero 80.
-
-Como queremos que la interrupcion pueda ser llamada desde codigo nivel 3 de las tareas la vamos a definir como una `IDT_ENTRY3`
-
-Entonces en idt_init() agregamos:
+Agregamos la entrada correspondiente a la syscall en la IDT:
 
 ```c
-IDT_ENTRY3(80);
+void idt_init(){
+    ...
+    IDT_ENTRY3(80);
+}
 ```
 
-Por ultimo en `isr.h` hay que agregar: 
+Y la declaramos en `idt.h`. 
 
-```h
-void _isr80();
-```
+b)
 
-B) Desde la syscall lo que vamos a hacer va a ser pausar a la tarea, establecer a la sexta tarea como runnable por si se interrumpe en el medio de la ejecucion y saltar a la sexta tarea. La sexta tarea se va a encargar de hacer el calculo y modificar una variable global indicando que hay que despausar a la tarea que la llamo porque ya terminamos de procesar la sexta tarea. 
+dudas:
+- por qué es necesario habilitar y deshabilitar la tarea 6?
+- cuándo sabemos que la tarea 6 terminó de utilizar el resultado en eax? Se encarga de usar el resultado y luego vuelve a activar a la tarea que llamó a la syscall
 
+---
 
-La sexta tarea va a recibir tambien en ecx el id de la tarea que la llamo para que cuando la sexta tarea termine despause a la tarea que la llamo y al final se pause a ella misma
+```nasm
 
-Definimos la syscall en `isr.asm`:
+sched_task_selector: dw 0xFAFA
+sched_task_offset: dd 0
+...
 
-```asm
 global _isr80
 _isr80:
     pushad
-    push eax
-    push DWORD [current_task]
-    call sched_disable_task
+
+    ; deshabilita tarea actual, habilita tarea 6, pone el eax en la tss de la tarea 6
+    push eax ; le pasamos el resultado del cálculo
+    call modificarEAX
     add esp, 4
-    push [SELECTOR_SEXTA_TAREA]
-    call modificar_eax
-    push DWORD [current_task]
-    call modificar_ecx
-    add esp, 12
-    push [ID_SEXTA_TAREA]
-    call sched_enable_task
-    add esp, 2
-    mov ax, [SELECTOR_SEXTA_TAREA] ; Habria que definir como una constante global este selector
-    mov edx, [ID_SEXTA_TAREA] ; Habria que definir como una constante global este id
-    mov [current_task], edx
+
+    ; context switch = cede tiempo de ejecución a tarea 6
     mov word [sched_task_selector], ax
-    jmp far [sched_task_offset] 
-    ; Pausamos de nuevo a la sexta tarea para que no se vuelva a correr
-    push [ID_SEXTA_TAREA]
-    call sched_disable_task
+    jmp far [sched_task_offset]
+
     popad
     iret
 ```
 
-Definimos en `tss.c` la funcion `modificar_eax` y `modificar_ecx` importando la gdt
+Luego definimos la función `XXXXX`:
 
 ```c
-void modificar_eax(uint16_t segsel, uint32_t eax_a_modificar){
-  uint16_t idx = segsel >> 3;
-  tss_t* tss_task = (tss_t*)((gdt[idx].base_15_0) | (gdt[idx].base_23_16 << 16) | (gdt[idx].base_31_24 << 24));
-  uint32_t* pila = tss_task->esp;
-  pila[7] = eax_a_modificar; 
-}
+uint16_t modificarEAX(uint32_t res){
+    sched_disable_task(current_task); // pausa la tarea actual
+    sched_enable_task(task6_id); // task6_id será una variable global
 
-void modificar_ecx(uint32_t id_tarea_llamadora, uint16_t segsel){
-  uint16_t idx = segsel >> 3;
-  tss_t* tss_task = (tss_t*)((gdt[idx].base_15_0) | (gdt[idx].base_23_16 << 16) | (gdt[idx].base_31_24 << 24));
-  uint32_t* pila = tss_task->esp;
-  pila[6] = id_tarea_llamadora; 
+    // como la tarea 6 recibirá en eax res, tenemos que ponerlo en ese registro en su tss
+
+    tss_t* tarea6_tss = &(tss_tasks[task6_id]); // puntero a la tss de la tarea 6
+    tarea6_tss.eax = res; // actualizamos el valor del eax
+    tarea_desalojada = current_task; // var global
+
+    return sched_tasks[task6_id].selector; // retornamos el selector de la tarea 6 para que cuando se haga el context switch salte ahí
 }
 ```
-C) Como la sexta tarea tiene nivel de privilegio 0 va a poder llamar a las funciones de `mmu.c` para despausar a la tarea
+c) 
 
-El codigo de la tarea va a ser: 
+```c
+while(true){
+    uint32_t eax = tss_tasks[current_task].eax; // obtengo eax de la tss de la tarea 6: es legal? creo que no, pero entonces: cómo accedo a la pila para ver el eax más reciente??
+    procesar(eax); // función que hace cualquier cosa
+    
+    sched_enable_task(tarea_desalojada); // despausa la tarea
+    sched_disable_task(current_task);
+    cambiar_tarea();
+}
+```
 
-```asm
-add eax, 2
-push ecx 
-call sched_enable_task
-add esp, 4
+```nasm
+global cambiar_tarea
+cambiar_tarea:
+    pushad
+
+    call sched_next_task
+    
+    mov word [sched_task_selector], ax
+    jmp far [sched_task_offset]
+
+    popad
+    iret
 ```
