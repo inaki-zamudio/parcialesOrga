@@ -1,4 +1,5 @@
 t e  a m o
+y o  t a m b i e n  t e  a m o  m i  c i e l i t o
 - 5 tareas
 - cuando terminan, ponen resultado en EAX
 
@@ -98,9 +99,10 @@ void tarea6() { // id de la tarea 6 es 5
     uint32_t eax3 = obtenerEAX(3);
     uint32_t eax4 = obtenerEAX(4);
     uint32_t p = procesar(eax0, eax1, eax2, eax3, eax4);
-    for (uint8_t i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < 5; i++) {
         sched_enable_task(i);
         escribirEAX(i, p);
+        sched_tasks[i].finished = 0;
     }
     sched_disable_task(current_task);
 }
@@ -122,10 +124,14 @@ d)
 
 ```c
 uint16_t sched_next_task(void) {
+  uint8_t finished = 1;
   for (uint8_t i = 0; i < 5; i++) {
-    if (!sched_tasks[i].finished) break;
+    finished = (finished & sched_tasks[i].finished);
+  }
+  // si alguna tarea no está terminada, no seguimos normal, y si están todas terminadas vamos a la sexta
+  if (finished){
     sched_enable_task(5); // asumimos que está pausada excepto acá
-    return sched_task[5].selector;
+    return sched_tasks[5].selector;
   }
   // Buscamos la próxima tarea viva (comenzando en la actual)
   int8_t i;
