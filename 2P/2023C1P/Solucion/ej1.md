@@ -5,87 +5,116 @@ a)
 > - (1) escriben en EAX resultados y (2) los puede leer
 > - (1) le ceden tiempo de ejecución a (2) y se quedan pausadas
 
-Agregamos la entrada correspondiente a la syscall en la IDT:
+a) 
+Primero, hace falta definir las TSS de estas 5 tareas:
+`tasks.c`:
 
 ```c
-void idt_init(){
+
+#define GDT_IDX_TASK_TAREA6 13 // :)
+
+void tasks_init() {
+    ...
+    for (int i = 1; i <= 5; i++) { // inicializa 5 tareas
+        task_id = create_task(TASK_TYPE);
+        sched_enable_task(task_id);
+    }
+    gdt[GDT_IDX_TASK_TAREA6] = tss_gdt_entry_for_task(&tss_tarea6);
+}
+```
+En `task_defines.h` habría que definir un nuevo `TASK_TAREA6_CODE_START` para que esté dentro del primer mega de memoria.
+
+Además, habría que definir, en `tss.c`, un nuevo struct:
+```c
+tss_t tss_tarea6 = {
+    .ss1 = 0,
+    .cr3 = KERNEL_PAGE_DIR,
+    .eip = TASK_TAREA6_CODE_START,
+    .eflags = EFLAGS_IF,
+    .esp = KERNEL_STACK,
+    .ebp = KERNEL_STACK,
+    .cs = GDT_CODE_0_SEL,
+    .ds = GDT_DATA_0_SEL,
+    .es = GDT_DATA_0_SEL,
+    .gs = GDT_DATA_0_SEL,
+    .fs = GDT_DATA_0_SEL,
+    .ss = GDT_DATA_0_SEL, 
+}
+```
+Ahora agregamos lo pertinente a la syscall:
+En `idt.c`:
+```c
+void idt_init() {
     ...
     IDT_ENTRY3(80);
 }
 ```
 
-Y la declaramos en `idt.h`. 
+En `isr.h`:
+```h
+...
+void _isr80();
+```
 
 b)
-
-dudas:
-- por qué es necesario habilitar y deshabilitar la tarea 6?
-- cuándo sabemos que la tarea 6 terminó de utilizar el resultado en eax? Se encarga de usar el resultado y luego vuelve a activar a la tarea que llamó a la syscall
-
----
-
 ```nasm
-
-sched_task_selector: dw 0xFAFA
-sched_task_offset: dd 0
+extern enviar_resultado
 ...
-
 global _isr80
 _isr80:
     pushad
 
-    ; deshabilita tarea actual, habilita tarea 6, pone el eax en la tss de la tarea 6
-    push eax ; le pasamos el resultado del cálculo
-    call modificarEAX
+    push eax
+
+    call enviar_resultado ; modificar EAX tarea 6, pausa tarea actual y devuelve selector tarea6
+
     add esp, 4
+    
+    ; hacemos el cambio a la tarea 6 :)
 
-    ; context switch = cede tiempo de ejecución a tarea 6
     mov word [sched_task_selector], ax
-    jmp far [sched_task_offset]
 
+    jmp far [sched_task_offset]
+    
     popad
     iret
 ```
 
-Luego definimos la función `XXXXX`:
-
 ```c
-uint16_t modificarEAX(uint32_t res){
-    sched_disable_task(current_task); // pausa la tarea actual
-    sched_enable_task(task6_id); // task6_id será una variable global
+#define EAX_EN_PILA 7 // creo que está en la 7 jeje :)
 
-    // como la tarea 6 recibirá en eax res, tenemos que ponerlo en ese registro en su tss
+uint8_t tarea_a_habilitar = -1; // var global que indicará qué tarea fue pausada por llamar a la syscall
 
-    tss_t* tarea6_tss = &(tss_tasks[task6_id]); // puntero a la tss de la tarea 6
-    tarea6_tss.eax = res; // actualizamos el valor del eax
-    tarea_desalojada = current_task; // var global
-
-    return sched_tasks[task6_id].selector; // retornamos el selector de la tarea 6 para que cuando se haga el context switch salte ahí
-}
-```
-c) 
-
-```c
-while(true){
-    uint32_t eax = tss_tasks[current_task].eax; // obtengo eax de la tss de la tarea 6: es legal? creo que no, pero entonces: cómo accedo a la pila para ver el eax más reciente??
-    procesar(eax); // función que hace cualquier cosa
-    
-    sched_enable_task(tarea_desalojada); // despausa la tarea
+uint16_t enviar_resultado(uint32_t eax) {
+    // modificamos EAX de la tarea 6:
+    modificarEAX(eax, sched_tasks[5].selector); 
+    // pausamos tarea actual:
     sched_disable_task(current_task);
-    cambiar_tarea();
+    tarea_a_habilitar = current_task;
+    sched_enable_task(5); // activo tarea 6
+    // devolvemos selector de la tarea 6:
+    return sched_tasks[5].selector;
+}
+
+void modificarEAX(uint32_t nuevo_eax, uint16_t segsel) {
+    tss_t* tss = obtenerTSS(segsel);
+    // vamos a la pila a modificar EAX:
+    tss->esp[EAX_EN_PILA] = nuevo_eax;
 }
 ```
 
+c) 
 ```nasm
-global cambiar_tarea
-cambiar_tarea:
-    pushad
+    push EAX
+    call procesar
+    add ESP, 4
+```
 
-    call sched_next_task
-    
-    mov word [sched_task_selector], ax
-    jmp far [sched_task_offset]
-
-    popad
-    iret
+```c
+uint32_t procesar(uint32_t res) {
+    sched_enable_task(tarea_a_habilitar);
+    tarea_a_habilitar = -1;
+    sched_disable_task(current_task);
+    return res + 32;
+}
 ```

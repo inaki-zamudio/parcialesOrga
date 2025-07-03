@@ -1,5 +1,5 @@
 t e  a m o
-y o  t a m b i e n  t e  a m o  m i  c i e l i t o
+y o  t a m b i e n  t e  a m o  m i  c i e l i t o <3 
 - 5 tareas
 - cuando terminan, ponen resultado en EAX
 
