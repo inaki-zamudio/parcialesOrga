@@ -1,26 +1,20 @@
-1) Para definir la syscall: 
+1)
+Habría que definir una nueva entrada en la idt, en `idt.c`:
 
-Para agregar la nueva syscall vamos a definir una interrupcion nueva en idt_init().
+```c
+idt_init() {
+  IDT_ENTRY3(80); // nivel 3 ya que quiero que todas las tareas de usuario la puedan llamar
+}
+```
 
-Como las syscalls suelen definirse a partir del numero de interrupcion 80 vamos a definir la syscall como la numero 80.
-
-Para que pueda ser llamada desde las tareas va a ser una IDT_ENTRY3.
-
-Asi que en la funcion `idt_init` agrego: `IDT_ENTRY3(80);`
-
-Tambien en isr.h hay que agregar:
+Luego, habría que declarar en `isr.h` el handler de la interrupción:
 
 ```h
+...
 void _isr80();
 ```
 
-2) El codigo de la syscall va a ser: 
-
-```asm
-global _isr80
-_isr80:
-    pushad
-    call copiar_tarea_actual
-    popad
-    iret
-```
+2)
+- Crear una nueva tarea. Esto es, designar en la GDT una entrada para el TSS descriptor, agregar la tarea al scheduler, setearle los valores por defecto (de lo que se encarga `tss_create_user_task`), agregarla al scheduler. Lo descrito es exactamente lo que hace `create_task` de `tasks.c`.
+- En la tss de la nueva tarea, vamos a querer copiar la TSS de la tarea que llamó a la syscall.
+- Hay que crear el esquema de paginación para la nueva tarea, pero quitar el atributo de escritura. La función `tss_create_user_task` va a ponernos el mismo mapeo de todo excepto de stack de nivel 0.

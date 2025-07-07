@@ -1,7 +1,7 @@
 ## Parciales y recuperatorios que ya resolví                                                                                     
                                                                                                                                  
  2025
-    - 1CP -
+    - 1CP - hecho
                                                                                                                                  
 - 2024
     - C1P - hecho
@@ -11,7 +11,7 @@
 
 - 2023
     - C1P - hecho
-    - C1R - en proceso (dudas)
+    - C1R - hecho, 2 no sirve
     - C2P - 1) hecho, 2) dudas -- VER REPO CAMI
     - C2R - 1) hecho, falta 2)
                                                                                                                                  
