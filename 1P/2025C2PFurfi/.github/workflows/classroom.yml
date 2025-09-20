@@ -1,0 +1,54 @@
+name: Autograding Tests
+
+on:
+    pull_request:
+        types: [labeled]
+        branches:
+            - main
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: self-hosted
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Ejercicio 1
+        id: ej1
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: ej1
+          command: cd src/ej1 && make valgrind_abi
+          timeout: 3
+          max-score: '1'
+      - name: Ejercicio 2
+        id: ej2
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: ej2
+          command: cd src/ej2 && make valgrind_abi
+          timeout: 3
+          max-score: '1'
+      - name: Ejercicio 3
+        id: ej3
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: ej3
+          command: cd src/ej3 && make valgrind_abi
+          timeout: 3
+          max-score: '1'
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          EJ1_RESULTS: "${{steps.ej1.outputs.result}}"
+          EJ2_RESULTS: "${{steps.ej2.outputs.result}}"
+          EJ3_RESULTS: "${{steps.ej3.outputs.result}}"
+        with:
+          runners: ej1,ej2,ej3

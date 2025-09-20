@@ -1,0 +1,12 @@
+.gdb_history
+*.o
+test_asm
+test_c
+test_abi
+vgcore.*
+
+./test_utils/venv
+
+global_foos.txt
+asm_defs.txt
+venv/
